@@ -55,13 +55,18 @@ def calculate_fundamental_matrix(pts1, pts2):
     assert pts1.shape[0]==pts2.shape[0]
     # Your code here
     ################################################
-    pts1 = normalize_points(pts1.T, 2)[0].T
-    pts2 = normalize_points(pts2.T, 2)[0].T
-
-    pts1_x = pts1[:,0]
-    pts1_y = pts1[:,1]
-    pts2_x = pts2[:,0]
-    pts2_y = pts2[:,1]
+    x1 = np.array([*pts1[2], 1])
+    x2 = np.array([*pts2[2], 1])
+    x1 = np.reshape(x1, (1,3))
+    x2 = np.reshape(x2, (3,1))
+    
+    pts1, T1 = normalize_points(pts1.T, 2)
+    pts2, T2 = normalize_points(pts2.T, 2)
+    print(f"Shape of T1: {T1.shape}")
+    pts1_x = pts1[0] 
+    pts1_y = pts1[1]
+    pts2_x = pts2[0]
+    pts2_y = pts2[1]
     
     A = np.concatenate((pts2_x*pts1_x, pts2_x*pts1_y, pts2_x,
                         pts2_y*pts1_x, pts2_y*pts1_y, pts2_y,
@@ -78,14 +83,12 @@ def calculate_fundamental_matrix(pts1, pts2):
     V[2] = 0
     # fundamental_matrix = np.matmul(np.matmul(S, np.diag([*V[:2], 0])), D)
     fundamental_matrix = S @ np.diag(V) @ D
-    x1 = np.array([*pts1[0], 1])
-    x2 = np.array([*pts2[0], 1])
-    x1 = np.reshape(x1, (1,3))
-    x2 = np.reshape(x2, (3,1))
+    fundamental_matrix = T2.T @ fundamental_matrix @ T1
+    
     print(f"shape of x1: {x1.shape}") 
     print(f"shape of x2: {x2.shape}")
     print(f"sihape of fundamental matrix: {fundamental_matrix.shape}")
-    res = np.matmul(np.matmul(x1, fundamental_matrix), x2)
+    res = x1 @ fundamental_matrix @ x2
     # res = x1@fundamental_matrix@x2
     # res = np.matmul(x1, fundamental_matrix, x2)
     print(f"Result: {res}")
