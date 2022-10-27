@@ -27,9 +27,38 @@ AGG_FILTER_SIZE = 5
 #=======================================================================================
 def bayer_to_rgb_bilinear(bayer_img):
     ################################################################
-    rgb_img = None
-    # print(f"Matrix: {bayer_img}")
-    # print(f"Shape of bayer img: {bayer_img.shape}")
+    # Initialize channels and rgb_img
+    m, n = bayer_img.shape
+    rgb_img = np.zeros((m,n,3))
+    r_img = np.zeros((m,n))
+    g_img = np.zeros((m,n))
+    b_img = np.zeros((m,n))
+    
+    # Extract channels from the raw image
+    r_img[0:m:2, 0:n:2] = bayer_img[0:m:2, 0:n:2]
+    g_img[0:m:2, 1:n:2] = bayer_img[0:m:2, 1:n:2]
+    g_img[1:m:2, 0:n:2] = bayer_img[1:m:2, 0:n:2]
+    b_img[1:m:2, 1:n:2] = bayer_img[1:m:2, 1:n:2]
+
+    #Define kernels
+    kernel1 = np.array([[0,1,0],[0,0,0],[0,1,0]])/2
+    kernel2 = np.array([[0,0,0],[1,0,1],[0,0,0]])/2
+    kernel3 = np.array([[0,1,0],[1,0,1],[0,1,0]])/4
+
+    # Interpolating red channel
+    r_img = r_img + cv2.filter2D(r_img, -1, kernel1)
+    r_img = r_img + cv2.filter2D(r_img, -1, kernel2)
+
+    # Interpolating green channel
+    g_img = g_img + cv2.filter2D(g_img, -1, kernel3) 
+
+    # Interpolating blue channel
+    b_img = b_img + cv2.filter2D(b_img, -1, kernel1)
+    b_img = b_img + cv2.filter2D(b_img, -1, kernel2)
+
+    rgb_img[:,:,0] = r_img
+    rgb_img[:,:,1] = g_img
+    rgb_img[:,:,2] = b_img    
     ################################################################
     return rgb_img
 
