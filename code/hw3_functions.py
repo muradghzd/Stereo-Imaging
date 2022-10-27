@@ -9,6 +9,7 @@
 # Before final submission, you can check your result by
 # set "VISUALIZE = True" in "hw3_main.py" to check your results.
 ################################################################
+from calendar import c
 from locale import normalize
 from turtle import shape
 from utils import normalize_points
@@ -117,9 +118,32 @@ def rectify_stereo_images(img1, img2, h1, h2):
     # In order to superpose two rectified images, you need to create certain amount of margin.
     # Which means you need to do some additional things to get fully warped image (not cropped).
     ################################################
-    img1_rectified = None
-    img2_rectified = None
+    a1, b1 = img1.shape[:2]
+    a2, b2 = img2.shape[:2]
 
+    corner1 = np.array([[[0, 0]],
+                        [[0, a1]],
+                        [[b1, a1]],
+                       [[b1, 0]]]).astype(np.float32)
+    corner2 = np.array([[[0, 0]],
+                        [[0, a2]],
+                        [[b2, a2]],
+                       [[b2, 0]]]).astype(np.float32)
+    
+    corner2_1 = cv2.perspectiveTransform(corner2, h2)
+    x2_1, y2_1 = [int(i) for i in corner2_1.min(axis=0).reshape(2)]#.astype(np.int32)
+    x2_2, y2_2 = [int(i) for i in corner2_1.max(axis=0).reshape(2)]#.astype(np.int32)
+    
+    corner1_2 = cv2.perspectiveTransform(corner1, h1)
+    x1_1, y1_1 = [int(j) for j in corner1_2.min(axis=0).reshape(2)]
+    x1_2, y1_2 = [int(j) for j in corner1_2.max(axis=0).reshape(2)]
+    
+    a = min(x2_1,x1_1); b = min(y2_1,y1_1)
+    c = max(x1_2, x2_2); d = max(y1_2, y2_2)
+
+    translation = np.array([[1,0,-a],[0,1,-b],[0,0,1]])
+    img1_rectified = cv2.warpPerspective(img1, translation@h1, (c-a,d-b)).astype(np.uint8)
+    img2_rectified = cv2.warpPerspective(img2, translation@h2, (c-a,d-b)).astype(np.uint8)
     ################################################
     return img1_rectified, img2_rectified
 
