@@ -1,2 +1,2 @@
-# CS484-HW3
-Stereo Imaging using Python
+# Stereo Imaging
+Implementation of image rectification and a basic stereo algorithm
